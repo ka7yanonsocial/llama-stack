@@ -29,6 +29,7 @@ from llama_stack.apis.inference import (
     ToolConfig,
     ToolResponseMessage,
     UserMessage,
+    ToolResponse,
 )
 from llama_stack.apis.safety import Safety
 from llama_stack.apis.tools import ToolGroups, ToolRuntime
@@ -168,7 +169,7 @@ class MetaReferenceAgentsImpl(Agents):
         agent_id: str,
         session_id: str,
         turn_id: str,
-        tool_responses: List[ToolResponseMessage],
+        tool_responses: List[ToolResponse | ToolResponseMessage],
         stream: Optional[bool] = False,
     ) -> AsyncGenerator:
         request = AgentTurnResumeRequest(
