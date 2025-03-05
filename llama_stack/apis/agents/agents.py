@@ -35,7 +35,7 @@ from llama_stack.apis.inference import (
     UserMessage,
 )
 from llama_stack.apis.safety import SafetyViolation
-from llama_stack.apis.tools import ToolDef
+from llama_stack.apis.tools import ToolDef, ToolInvocationResult
 from llama_stack.providers.utils.telemetry.trace_protocol import trace_protocol
 from llama_stack.schema_utils import json_schema_type, register_schema, webmethod
 
@@ -302,7 +302,7 @@ class AgentTurnResumeRequest(BaseModel):
     agent_id: str
     session_id: str
     turn_id: str
-    tool_responses: List[ToolResponseMessage]
+    tool_responses: List[ToolResponse | ToolResponseMessage]
     stream: Optional[bool] = False
 
 
@@ -363,7 +363,7 @@ class Agents(Protocol):
         agent_id: str,
         session_id: str,
         turn_id: str,
-        tool_responses: List[ToolResponseMessage],
+        tool_responses: List[ToolResponse | ToolResponseMessage],
         stream: Optional[bool] = False,
     ) -> Union[Turn, AsyncIterator[AgentTurnResponseStreamChunk]]:
         """Resume an agent turn with executed tool call responses.
@@ -374,6 +374,7 @@ class Agents(Protocol):
         :param session_id: The ID of the session to resume.
         :param turn_id: The ID of the turn to resume.
         :param tool_responses: The tool call responses to resume the turn with.
+            NOTE: ToolResponseMessage will be deprecated. Use ToolResponse.
         :param stream: Whether to stream the response.
         :returns: A Turn object if stream is False, otherwise an AsyncIterator of AgentTurnResponseStreamChunk objects.
         """
