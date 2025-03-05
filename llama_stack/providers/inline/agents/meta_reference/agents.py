@@ -27,6 +27,7 @@ from llama_stack.apis.agents import (
 from llama_stack.apis.inference import (
     Inference,
     ToolConfig,
+    ToolResponse,
     ToolResponseMessage,
     UserMessage,
     ToolResponse,
