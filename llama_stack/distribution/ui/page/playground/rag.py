@@ -124,13 +124,14 @@ def rag_chat_page():
     else:
         strategy = {"type": "greedy"}
 
-    agent_config = AgentConfig(
+    agent = Agent(
+        llama_stack_api.client,
         model=selected_model,
         instructions=system_prompt,
         sampling_params={
             "strategy": strategy,
         },
-        toolgroups=[
+        tools=[
             dict(
                 name="builtin::rag/knowledge_search",
                 args={
@@ -138,12 +139,7 @@ def rag_chat_page():
                 },
             )
         ],
-        tool_choice="auto",
-        tool_prompt_format="json",
-        enable_session_persistence=False,
     )
-
-    agent = Agent(llama_stack_api.client, agent_config)
     session_id = agent.create_session("rag-session")
 
     # Chat input
