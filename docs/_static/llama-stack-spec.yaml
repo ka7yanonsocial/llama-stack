@@ -3167,6 +3167,10 @@ components:
     CompletionResponse:
       type: object
       properties:
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricEvent'
         content:
           type: string
           description: The generated completion text
@@ -3485,6 +3489,10 @@ components:
     CompletionResponseStreamChunk:
       type: object
       properties:
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricEvent'
         delta:
           type: string
           description: >-
@@ -4913,15 +4921,27 @@ components:
         - timestamp
         - value
       title: MetricDataPoint
+    MetricLabel:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+      additionalProperties: false
+      required:
+        - name
+        - value
+      title: MetricLabel
     MetricSeries:
       type: object
       properties:
         metric:
           type: string
         labels:
-          type: object
-          additionalProperties:
-            type: string
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricLabel'
         values:
           type: array
           items:
