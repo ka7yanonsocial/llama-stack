@@ -240,7 +240,7 @@ class MetricLabel(BaseModel):
 
 @json_schema_type
 class MetricDataPoint(BaseModel):
-    timestamp: datetime
+    timestamp: int
     value: float
 
 
@@ -307,7 +307,7 @@ class Telemetry(Protocol):
         metric_name: str,
         start_time: int,
         end_time: Optional[int] = None,
-        step: Optional[str] = "1d",
+        granularity: Optional[str] = "1d",
         query_type: MetricQueryType = MetricQueryType.RANGE,
         label_matchers: Optional[List[MetricLabelMatcher]] = None,
     ) -> GetMetricsResponse: ...
