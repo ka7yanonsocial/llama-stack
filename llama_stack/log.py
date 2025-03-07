@@ -82,6 +82,25 @@ class CustomRichHandler(RichHandler):
         kwargs["console"] = Console(width=120)
         super().__init__(*args, **kwargs)
 
+    def emit(self, record):
+        """Override emit to handle markup errors gracefully."""
+        try:
+            super().emit(record)
+        except Exception as e:
+            # If there's a markup error, retry with markup disabled
+            if "MarkupError" in str(e.__class__):
+                # Temporarily disable markup
+                original_markup = self.markup
+                self.markup = False
+                try:
+                    super().emit(record)
+                finally:
+                    # Restore original markup setting
+                    self.markup = original_markup
+            else:
+                # For other exceptions, just print a simple error message
+                print(f"Error in log handling: {str(e)}")
+
 
 def setup_logging(category_levels: Dict[str, int]) -> None:
     """
