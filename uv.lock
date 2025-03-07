@@ -878,6 +878,7 @@ dependencies = [
     { name = "rich" },
     { name = "setuptools" },
     { name = "termcolor" },
+    { name = "tiktoken" },
 ]
 
 [package.optional-dependencies]
@@ -978,6 +979,7 @@ requires-dist = [
     { name = "sphinxcontrib-video", marker = "extra == 'docs'" },
     { name = "sqlite-vec", marker = "extra == 'test'" },
     { name = "termcolor" },
+    { name = "tiktoken" },
     { name = "tiktoken", marker = "extra == 'test'" },
     { name = "tomli", marker = "extra == 'docs'" },
     { name = "torch", marker = "extra == 'test'", specifier = ">=2.6.0", index = "https://download.pytorch.org/whl/cpu" },
