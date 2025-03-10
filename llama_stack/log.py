@@ -10,6 +10,7 @@ from logging.config import dictConfig
 from typing import Dict
 
 from rich.console import Console
+from rich.errors import MarkupError
 from rich.logging import RichHandler
 from rich.errors import MarkupError
 
