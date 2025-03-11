@@ -76,6 +76,7 @@ class CodeExecutionRequest:
     only_last_cell_fail: bool = True
     seed: int = 0
     strip_fpaths_in_stderr: bool = True
+    use_bwrap: bool = True
 
 
 class CodeExecutor:
@@ -83,6 +84,12 @@ class CodeExecutor:
         self.context = context
 
     def execute(self, req: CodeExecutionRequest) -> dict:
+        if req.use_bwrap:
+            return self._execute_with_bwrap(req)
+        else:
+            return self._execute_unsafe(req)
+
+    def _execute_with_bwrap(self, req: CodeExecutionRequest) -> dict:
         scripts = req.scripts
         for i in range(len(scripts) - 1):
             if req.only_last_cell_stdouterr:
@@ -118,6 +125,78 @@ _set_seeds()\
                     MPLBACKEND="module://matplotlib_custom_backend",
                     PYTHONPATH=f"{DIRNAME}:{python_path}",
                 )
+                stdout, stderr, returncode = do_subprocess(
+                    cmd=cmd,
+                    env=env,
+                    ctx=self.context,
+                )
+
+                stderr = stderr.strip()
+                if req.strip_fpaths_in_stderr:
+                    pattern = r'File "([^"]+)", line (\d+)'
+                    stderr = re.sub(pattern, r"line \2", stderr)
+
+                return {
+                    "process_status": "completed",
+                    "returncode": returncode,
+                    "stdout": stdout.strip(),
+                    "stderr": stderr,
+                }
+
+            except subprocess.TimeoutExpired:
+                return {
+                    "process_status": "timeout",
+                    "stdout": "Timed out",
+                    "stderr": "Timed out",
+                }
+
+            except Exception as e:
+                return {
+                    "process_status": "error",
+                    "error_type": type(e).__name__,
+                    "stderr": str(e),
+                    "stdout": str(e),
+                }
+
+    def _execute_unsafe(self, req: CodeExecutionRequest) -> dict:
+        """Execute code without using bwrap sandboxing."""
+        scripts = req.scripts
+        for i in range(len(scripts) - 1):
+            if req.only_last_cell_stdouterr:
+                scripts[i] = STDOUTERR_SINK_WRAPPER_TEMPLATE.format(code=textwrap.indent(scripts[i], " " * 4))
+            if req.only_last_cell_fail:
+                scripts[i] = TRYEXCEPT_WRAPPER_TEMPLATE.format(code=textwrap.indent(scripts[i], " " * 4))
+
+        # Seeds prefix:
+        seed = req.seed
+        seeds_prefix = f"""\
+def _set_seeds():
+    import random
+    random.seed({seed})
+    import numpy as np
+    np.random.seed({seed})
+_set_seeds()\
+"""
+
+        script = "\n\n".join([seeds_prefix] + [CODE_ENV_PREFIX] + scripts)
+        with tempfile.TemporaryDirectory() as dpath:
+            code_fpath = os.path.join(dpath, "code.py")
+            with open(code_fpath, "w") as f:
+                f.write(script)
+
+            try:
+                python_path = os.environ.get("PYTHONPATH", "")
+                env = dict(
+                    os.environ,
+                    PYTHONHASHSEED=str(seed),
+                    MPLCONFIGDIR=dpath,
+                    MPLBACKEND="module://matplotlib_custom_backend",
+                    PYTHONPATH=f"{DIRNAME}:{python_path}",
+                )
+
+                # Direct execution with Python interpreter without bwrap
+                cmd = [sys.executable, "-c", script]
+
                 stdout, stderr, returncode = do_subprocess(
                     cmd=cmd,
                     env=env,
